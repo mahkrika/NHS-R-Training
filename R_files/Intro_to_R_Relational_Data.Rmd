@@ -1,0 +1,96 @@
+---
+title: "Intro to R - Relational Data"
+author: "A.Kirkham"
+date: "10/02/2020"
+#output: html_document
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This guide to relational data has been built following slides from the NHS-R community at:  
+https://github.com/nhs-r-community/intro_r/blob/master/07-workshopv2_joins.pdf
+
+The below code and output are generated from following these slides.
+
+All of the resources used here are found on the NHS-R Community Github pages:
+https://github.com/nhs-r-community/intro_r
+
+
+**Now follows a workthrough of the slides.**
+
+## Relational Data
+It is rare to find all of the data you require for an analysis within a single table.
+
+Typically you will have to link two (or more) tables together by matching on common "key" variables.  
+- Joins in SQL.
+
+The main focus here will be on left (outer) joins.  
+The syntax is similar for other types of joins.
+
+## Left Join
+```{r, eval=FALSE}
+table_1 %>%
+  left_join(table_2, by = "x")
+```
+
+Where we:  
+1: Keep the structure of table_1  
+2: ... and match to observations in table_2  
+3: With a "key" variable (common to both tables).
+
+We're going to join two tables - one with cases of tuberculosis by country, one with population by country.  
+From this new table we can derive a rate.
+
+Import: `tb_cases.csv`, and `tb_pop.csv`.
+
+```{r, message=FALSE}
+library(tidyverse)
+library(readr)
+tb_cases <- read_csv("tb_cases.csv")
+tb_popul <- read_csv("tb_pop.csv")
+```
+
+Then we can do the following, whilst ensuring that we:  
+1: Keep the structure of the `tb_cases` data frame;  
+2: Match to rows in `tb_popul`;  
+3: Based on "country"
+
+```{r}
+tb_cases %>%
+  left_join(tb_popul, by = "country")
+```
+
+**But, oh no! Duplicates!**  
+For every value of Brazil in tb_cases there are four in `tb_popul`...
+
+### Join on multiple rows
+Using the vector syntax that we discussed in the Addendum of Intro_to_R_dplyr we can combine multiple matching variables for the join.
+
+```{r}
+tb_cases %>%
+  left_join(tb_popul, by = c("country", "year"))
+```
+
+### Joining with different names
+If two tables have **different names** for the **same variable**:
+
+```{r, eval=FALSE}
+tb_cases %>%
+  left_join(bad_names, by = c("country" = "Place", "Year" = "yr"))
+# This won't run of course - it is fictional data. The left side of the = is the originating table (cases), whereas the right side of the = relates to the joining table (bad_names).
+```
+
+## Other dplyr joins
+Some other dplyr joins include:
+
+* dplyr::right_join(a,b,by="x1")
+  + Join matching rows from a to b.
+* dplyr::inner_join(a,b,by="x1")
+  + Join data. Retain only rows in both sets.
+* dplyr::full_join(a,b,by="x1")
+  + Join data. Retain all values, all rows.
